@@ -9,6 +9,8 @@ vk_key = 'SoMeKeY'
 
 vk_service_key = 'SoMeKeY'
 
+arangodb_root_password = 'SoMeRoOtPaSsWoRd'
+
 arangodb_user = 'arangodb_user'
 
-arangodb_password = 'SoMePaSsWoRd'
+arangodb_user_password = 'SoMePaSsWoRd'
