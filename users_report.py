@@ -1,9 +1,7 @@
-from arango_db import db_find_or_create, collection_find_or_create
+from arango_db import connect_to_db, find_or_create_collection
 
+db = connect_to_db('social_graph_db')
+users = find_or_create_collection(db, 'users')
 
-db = db_find_or_create('social_graph_db')
-users_collection = collection_find_or_create(db, 'users')
-
-users = users_collection.fetchAll()
 for user in users:
-    print(f"User {user['first_name']} {user['last_name']}")
+    print(f"User {user['_key']}: {user['first_name']} {user['last_name']}")
