@@ -1,12 +1,22 @@
 <html>
-    <head>
-        {% if title %}
-        <title>{{ title }} - Microblog</title>
-        {% else %}
-        <title>Welcome to Microblog!</title>
-        {% endif %}
-    </head>
-    <body>
-        <h1>Hello, {{ user.first_name }}!</h1>
-    </body>
+  <head>
+    <title>VK 6Handshakes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Привет, {{ user }}!</h1>
+      <br>
+      <h2>Кого будем искать?</h2>
+      <form action="" method="post">
+        <input type="text" placeholder="" name="search" value="{{
+          request.form.search }}">
+        <input class="btn btn-default" type="submit" value="Искать!">
+      </form>
+      {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}
+      {% endif %}
+      </div>
+  </body>
 </html>
