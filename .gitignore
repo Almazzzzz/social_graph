@@ -106,3 +106,4 @@ venv.bak/
 # other
 settings.py
 config.py
+vk_config.v2.json
