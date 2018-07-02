@@ -1,16 +1,20 @@
 import vk
 import settings
 
-session = vk.Session(access_token=settings.vk_service_key)
-api = vk.API(session, v='5.78')
 
+class VkApi:
+    def __init__(self):
+        self.session = vk.Session(access_token=settings.vk_service_key)
+        self.api = vk.API(self.session, v='5.78')
 
-def get_friends(user_id):
-    # user = api.users.get(user_ids=user_id)
-    try:
-        friends = api.friends.get(user_id=user_id)
-    except vk.exceptions.VkAPIError:
-        friends = { 'items': [] }
-    friends_list = friends.get('items', [])[:10]
+    def get_friends(self, user_id):
+        # user = self.api.users.get(user_ids=user_id)
+        try:
+            friends = self.api.friends.get(user_id=user_id)
+        except vk.exceptions.VkAPIError:
+            friends = {'items': []}
+        # Limit number of loaded friends for development
+        # TODO: remove limitation in production
+        friends_list = friends.get('items', [])[:20]
 
-    return friends_list
+        return friends_list
