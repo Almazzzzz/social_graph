@@ -58,3 +58,13 @@ def find_or_create_edge_definition(graph, definition_name,
             from_vertex_collections=[vertex_collection_name],
             to_vertex_collections=[vertex_collection_name]
         )
+
+
+def traverse(graph, start_vertex):
+    graph.traverse(
+        start_vertex=start_vertex,
+        direction='outbound',
+        strategy='bfs',
+        edge_uniqueness='global',
+        vertex_uniqueness='global',
+    )

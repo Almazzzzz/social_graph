@@ -11,6 +11,6 @@ def get_friends(user_id):
         friends = api.friends.get(user_id=user_id)
     except vk.exceptions.VkAPIError:
         friends = { 'items': [] }
-    friends_list = friends.get('items', [])[:10]
+    friends_list = friends.get('items', [])
 
     return friends_list

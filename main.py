@@ -7,34 +7,38 @@ users = find_or_create_vertex_collection(graph, 'users')
 friends = find_or_create_edge_definition(graph, 'friends', 'users')
 
 
-def main(start_vk_id, goal_vk_id):
-    result = bfs(start_vk_id, goal_vk_id)
-    print(result)
-
-
-def bfs(start_vk_id, goal_vk_id):
+def bfs(start_vk_id, goal_vk_id, stop_level=6):
     level = 0
-    prev_parent = None
-    queue = [[prev_parent, start_vk_id]]
+    stop_condition = False
+    queue = [[None, start_vk_id, level]]
     insert_user(start_vk_id)
 
-    while queue and level < 4:
+    while queue:
         current = queue.pop(0)
-        print(current)
+        print(f'Текущий: {current}')
         id = current[1]
         parent = current[0]
+        level = current[2] + 1
+        if level > stop_level:
+            break
         insert_user(id)
 
         if parent:
             insert_friend(parent, id)
         if id == goal_vk_id:
             return True
-        friends_list = get_friends(id)
-        print(friends_list)
-        queue += [[id, friend] for friend in friends_list]
-        if prev_parent != parent:
-            level += 1
-        prev_parent = parent
+
+        if not stop_condition:
+            friends_list = get_friends(id)
+            stop_condition = goal_vk_id in friends_list
+            if stop_condition:
+                queue = [[id, goal_vk_id, level]]
+            else:
+                ids_in_queue = [elem[1] for elem in queue]
+                queue.extend([[id, friend, level] for friend in friends_list if friend not in ids_in_queue])
+
+        print(f'Очередь: {len(queue)}')
+        print('')
 
     return False
 
@@ -54,14 +58,5 @@ def insert_friend(first_vk_id, last_vk_id):
         })
 
 
-def traverse(start_vertex):
-    graph.traverse(
-        start_vertex=start_vertex,
-        direction='outbound',
-        strategy='bfs',
-        edge_uniqueness='global',
-        vertex_uniqueness='global',
-    )
-
-
-main(1000, 1001)
+result = bfs(1861235, 11821, 5)
+print(result)
