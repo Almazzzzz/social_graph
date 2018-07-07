@@ -28,31 +28,6 @@ class ArangoDb:
         else:
             return self.db.create_collection(collection_name)
 
-    def find_or_create_graph(self, graph_name):
-        if self.db.has_graph(graph_name):
-            return self.db.graph(graph_name)
-        else:
-            return self.db.create_graph(graph_name)
-
-    @staticmethod
-    def find_or_create_vertex_collection(graph, collection_name):
-        if graph.has_vertex_collection(collection_name):
-            return graph.vertex_collection(collection_name)
-        else:
-            return graph.create_vertex_collection(collection_name)
-
-    @staticmethod
-    def find_or_create_edge_definition(graph, definition_name,
-                                       vertex_collection_name):
-        if graph.has_edge_definition(definition_name):
-            return graph.edge_collection(definition_name)
-        else:
-            return graph.create_edge_definition(
-                edge_collection=definition_name,
-                from_vertex_collections=[vertex_collection_name],
-                to_vertex_collections=[vertex_collection_name]
-            )
-
     @staticmethod
     def traverse(graph, start_vertex):
         graph.traverse(
