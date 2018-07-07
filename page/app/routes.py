@@ -1,9 +1,12 @@
 from flask import Flask, render_template, redirect, url_for, request, session, escape, make_response, Response
 from app import app
 import vk_api
+import datetime
 
 import json
 from wtforms import TextField, Form
+
+CURRENT_DATE = datetime.datetime.utcnow()
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
@@ -23,7 +26,8 @@ def login():
             else:
                 #session['username'] = request.form['username']
                 resp = make_response(redirect(url_for('hello')))
-                resp.set_cookie('username', request.form['username'])
+                expire_date = CURRENT_DATE + datetime.timedelta(days=1)
+                resp.set_cookie('username', request.form['username'], expires=expire_date)
                 return resp
         else:
             error = 'Empty Credentials. Please try again.'
@@ -46,7 +50,7 @@ def hello():
 
     if request.method == 'POST':
         if request.form['search']:
-            error = curr_user_api.search.getHints(q=request.form['search'], limit=100)
+            error = curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
             print(error)
 
     return render_template('hello.html', user=user, error=error)
