@@ -2,6 +2,8 @@ from flask import Flask, render_template, redirect, url_for, request, session, e
 from app import app
 import vk_api
 import datetime
+import uwsgi
+import settings # app_id, client_secret
 
 import json
 from wtforms import TextField, Form
@@ -14,7 +16,7 @@ def login():
     error = None
     if request.method == 'POST':
         if request.form['username'] and request.form['password']:
-            sess = vk_api.VkApi(app_id='6615751', client_secret='uw55IDiDcEtaBXvLhQqi',
+            sess = vk_api.VkApi(app_id=settings.vk_app, client_secret=settings.vk_key,
                                 login=request.form['username'], password=request.form['password'],
                                 scope='users, friends', api_version='5.80')
             try:
@@ -45,13 +47,16 @@ def hello():
         return redirect(url_for('login'))
     else:
         curr_user_api = login.get_api()
-        print(login.check_sid())
+        user_id = login.check_sid()['user']['id']
         user = curr_user_api.account.getProfileInfo()['first_name']
 
     if request.method == 'POST':
         if request.form['search']:
-            error = curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
+            error = 'asd'#curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
+            uwsgi.mule_msg(str(user_id) + '_' + 'search_user_id')
             print(error)
+        else:
+            error = 'Нужно указать кого искать'
 
     return render_template('hello.html', user=user, error=error)
 
