@@ -5,9 +5,6 @@ import datetime
 import uwsgi
 import settings # app_id, client_secret
 
-import json
-from wtforms import TextField, Form
-
 CURRENT_DATE = datetime.datetime.utcnow()
 
 @app.route('/', methods=['GET', 'POST'])
@@ -40,6 +37,8 @@ def login():
 @app.route('/hello', methods=['GET', 'POST'])
 def hello():
     error = None
+    cache = None
+    fails = {'notfound': 'Ничего не нашлось', 'fail': 'Ничего не нашлось', 'inprogress': 'Поиск ещё ведется'}
     login = vk_api.VkApi(login=request.cookies.get('username'), scope='users, friends, groups')
     try:
         login.auth()
@@ -52,32 +51,22 @@ def hello():
 
     if request.method == 'POST':
         if request.form['search']:
-            error = 'asd'#curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
-            uwsgi.mule_msg(str(user_id) + '_' + 'search_user_id')
-            print(error)
+            user_search = str(user_id) + '_' + str(request.form['search'])
+            if uwsgi.cache_exists(user_search):
+                cache_content = uwsgi.cache_get(user_search).decode("utf-8")
+                if cache_content in ['found']:
+                    error = 'Есть в кеше, идём в бвзу'
+                    uwsgi.mule_msg(user_search)
+                elif cache_content in list(fails.keys()):
+                    error = fails.get(cache_content)
+                else:
+                    error = 'Никуда не попал'
+                    print(cache_content)
+            else:
+                error = 'Кеш пустой. Поищем в базе'
+                uwsgi.mule_msg(user_search)
+            #curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
         else:
             error = 'Нужно указать кого искать'
 
-    return render_template('hello.html', user=user, error=error)
-
-cities = ["Bratislava",
-          "Banská Bystrica",
-          "Prešov",
-          "Považská Bystrica",
-          "Žilina",
-          "Košice",
-          "Ružomberok",
-          "Zvolen",
-          "Poprad"]
-
-class SearchForm(Form):
-    autocomp = TextField('Insert City', id='city_autocomplete')
-
-@app.route('/_autocomplete', methods=['GET'])
-def autocomplete():
-    return Response(json.dumps(cities), mimetype='application/json')
-
-@app.route('/temp', methods=['GET', 'POST'])
-def temp():
-    form = SearchForm(request.form)
-    return render_template("search.html", form=form)
+    return render_template('hello.html', user=user, error=error, cache=cache)

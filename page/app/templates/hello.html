@@ -14,8 +14,11 @@
           request.form.search }}">
         <input class="btn btn-default" type="submit" value="Искать!">
       </form>
+      {% if cache %}
+        <h4>Ваш запрос обрабатывается</h4>
+      {% endif %}
       {% if error %}
-        <p class="error"><strong>Error:</strong> {{ error }}
+        <p class="error"> {{ error }}
       {% endif %}
       </div>
   </body>
