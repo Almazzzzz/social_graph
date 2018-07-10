@@ -36,9 +36,12 @@ def login():
 
 @app.route('/hello', methods=['GET', 'POST'])
 def hello():
-    error = None
-    cache = None
-    fails = {'notfound': 'Ничего не нашлось', 'fail': 'Ничего не нашлось', 'inprogress': 'Поиск ещё ведется'}
+    info = None
+    user_info_fn = None
+    user_info_ln = None
+    user_info_photo = None
+    fails = {'notfound': 'Ничего не нашлось', 'fail': 'Ничего не нашлось',\
+             'inprogress': 'Поиск ещё ведется, придите попозже'}
     login = vk_api.VkApi(login=request.cookies.get('username'), scope='users, friends, groups')
     try:
         login.auth()
@@ -51,22 +54,32 @@ def hello():
 
     if request.method == 'POST':
         if request.form['search']:
-            user_search = str(user_id) + '_' + str(request.form['search'])
-            if uwsgi.cache_exists(user_search):
-                cache_content = uwsgi.cache_get(user_search).decode("utf-8")
-                if cache_content in ['found']:
-                    error = 'Есть в кеше, идём в бвзу'
-                    uwsgi.mule_msg(user_search)
-                elif cache_content in list(fails.keys()):
-                    error = fails.get(cache_content)
-                else:
-                    error = 'Никуда не попал'
-                    print(cache_content)
+            try:
+                user_info = curr_user_api.users.get(user_ids=str(request.form['search']),\
+                                                    fields='photo_50', name_case='acc')
+            except:
+                info = 'Нет такого, попробуй поскать кого-то ещё'
             else:
-                error = 'Кеш пустой. Поищем в базе'
-                uwsgi.mule_msg(user_search)
+                user_info_fn = user_info[0].get('first_name')
+                user_info_ln = user_info[0].get('last_name')
+                user_info_photo = user_info[0].get('photo_50')
+                user_search = str(user_id) + '_' + str(request.form['search'])
+                if uwsgi.cache_exists(user_search):
+                    cache_content = uwsgi.cache_get(user_search).decode("utf-8")
+                    if cache_content in ['found']:
+                        info = 'Есть в кеше, идём в базу'
+                        uwsgi.mule_msg(user_search)
+                    elif cache_content in list(fails.keys()):
+                        info = fails.get(cache_content)
+                    else:
+                        info = 'Никуда не попал'
+                        print(cache_content)
+                else:
+                    info = 'Кеш пустой. Поищем в базе'
+                    uwsgi.mule_msg(user_search)
             #curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
         else:
-            error = 'Нужно указать кого искать'
+            info = 'Нужно указать кого искать'
 
-    return render_template('hello.html', user=user, error=error, cache=cache)
+    return render_template('hello.html', user=user, info=info, user_info_fn=user_info_fn,\
+                            user_info_ln=user_info_ln, user_info_photo=user_info_photo)
