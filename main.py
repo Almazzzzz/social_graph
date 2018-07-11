@@ -62,6 +62,22 @@ def insert_friend(first_vk_id, last_vk_id):
         })
 
 
+def find_path(start_vk_id, target_vk_id):
+    cursor = graph.db.aql.execute(
+        'FOR v, e '
+        'IN OUTBOUND SHORTEST_PATH '
+        "@start_vertex TO @target_vertex "
+        "GRAPH 'vk' "
+        'RETURN v._key',
+        bind_vars={'start_vertex': f'users/{start_vk_id}',
+                   'target_vertex': f'users/{target_vk_id}'}
+    )
+    result = [doc for doc in cursor]
+
+    return result
+
+
 if __name__ == '__main__':
-    result = bfs(1861235, 11821, 5)
+    # result = bfs(1861235, 11821, 5)
+    result = find_path(1861235, 11821)
     print(result)
