@@ -63,7 +63,8 @@ def hello():
                 user_info_fn = user_info[0].get('first_name')
                 user_info_ln = user_info[0].get('last_name')
                 user_info_photo = user_info[0].get('photo_50')
-                user_search = str(user_id) + '_' + str(request.form['search'])
+                user_info_id = user_info[0].get('id')
+                user_search = str(user_id) + '_' + str(user_info_id)
                 if uwsgi.cache_exists(user_search):
                     cache_content = uwsgi.cache_get(user_search).decode("utf-8")
                     if cache_content in ['found']:
