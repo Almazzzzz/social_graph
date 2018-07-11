@@ -19,19 +19,19 @@ def login():
 
         error = service.error
         if not error:
-            response = make_response(redirect(url_for('hello')))
+            response = make_response(redirect(url_for('search_user')))
             expire_date = CURRENT_DATE + datetime.timedelta(days=1)
             response.set_cookie('username', request.form['username'],
                                 expires=expire_date)
             return response
 
     if request.cookies.get('username'):
-        return redirect(url_for('hello'))
+        return redirect(url_for('search_user'))
 
     return render_template('login.html', error=error)
 
-@app.route('/hello', methods=['GET', 'POST'])
-def hello():
+@app.route('/search_user', methods=['GET', 'POST'])
+def search_user():
     user = None
     info = None
     user_info_fn = None
@@ -82,5 +82,5 @@ def hello():
         else:
             info = 'Нужно указать кого искать'
 
-    return render_template('hello.html', user=user, info=info, user_info_fn=user_info_fn,
+    return render_template('search_user.html', user=user, info=info, user_info_fn=user_info_fn,
                             user_info_ln=user_info_ln, user_info_photo=user_info_photo)
