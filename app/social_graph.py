@@ -1,12 +1,15 @@
-from flask import Flask, render_template, redirect, url_for, request, session, escape, make_response, Response
+from flask import Flask, render_template, redirect, url_for, request, session
+from flask import escape, make_response, Response
 from app import app
-import vk_api
 import datetime
+import json
 import uwsgi
 from vk_api_for_web import *
 import settings
 
+
 CURRENT_DATE = datetime.datetime.utcnow()
+
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
@@ -30,6 +33,26 @@ def login():
 
     return render_template('login.html', error=error)
 
+
+@app.route('/autocomplete', methods=['GET'])
+def autocomplete():
+    result = []
+    term = request.args.get('term')
+    username = request.cookies.get('username')
+    service = VkApiForWeb(login=username)
+    vk_session = service.session
+
+    if service.error:
+        return result
+    else:
+        api = vk_session.get_api()
+        data = api.search.getHints(q=term, limit=40,
+                                   fields='country, city, photo_50')
+        result = autocomplete_data(data)
+
+    return Response(json.dumps(result), mimetype='application/json')
+
+
 @app.route('/search_user', methods=['GET', 'POST'])
 def search_user():
     user = None
@@ -47,16 +70,15 @@ def search_user():
     if service.error:
         return redirect(url_for('login'))
     else:
-        curr_user_api = vk_session.get_api()
+        api = vk_session.get_api()
         user_id = vk_session.check_sid()['user']['id']
-        user = curr_user_api.account.getProfileInfo()['first_name']
+        user = api.account.getProfileInfo()['first_name']
 
     if request.method == 'POST':
         if request.form['search']:
             try:
-                user_info = curr_user_api.users.get(user_ids=str(request.form['search']),
-                                                    fields='photo_50', name_case='acc')
-                print(user_info)
+                user_info = api.users.get(user_ids=str(request.form['search']),
+                                          fields='photo_50', name_case='acc')
             except:
                 info = 'Нет такого, попробуй поискать кого-то еще'
             else:
@@ -74,13 +96,13 @@ def search_user():
                         info = fails.get(cache_content)
                     else:
                         info = 'Как ты сюда попал?'
-                        print(cache_content)
                 else:
                     info = 'Кеш пустой. Поищем в базе'
                     uwsgi.mule_msg(user_search)
-            #curr_user_api.search.getHints(q=request.form['search'], limit=100, fields='country, city, photo_50')
         else:
             info = 'Нужно указать кого искать'
 
-    return render_template('search_user.html', user=user, info=info, user_info_fn=user_info_fn,
-                            user_info_ln=user_info_ln, user_info_photo=user_info_photo)
+    return render_template('search_user.html', user=user, info=info,
+                           user_info_fn=user_info_fn,
+                           user_info_ln=user_info_ln,
+                           user_info_photo=user_info_photo)

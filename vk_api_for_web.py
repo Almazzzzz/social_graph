@@ -22,3 +22,24 @@ class VkApiForWeb:
             self.error = 'Ошибка авторизации'
         except:
             self.error = 'Произошла ошибка. Попробуйте еще раз'
+
+
+def autocomplete_data(data):
+    result = []
+    for item in data['items']:
+        if item['type'] == 'profile':
+            label_list = []
+            profile = item['profile']
+            name = ' '.join([item['profile']['first_name'],
+                            item['profile']['last_name']])
+            label_list.extend([name])
+            place = [profile[key]['title'] for key in ['city', 'country']
+                     if profile.get(key, None)]
+            label_list.extend(place)
+            if item.get('description', None):
+                label_list.extend([item['description']])
+            label = ', '.join(label_list)
+            value = profile['id']
+            result.extend([{'label': label, 'value': value}])
+
+    return result

@@ -1,25 +1,33 @@
-<html>
+<!doctype html>
+<html lang='ru'>
   <head>
     <title>VK 6Handshakes</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel='stylesheet' href='/static/css/bootstrap.min.css'>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   </head>
+
   <body>
-    <div class="container" align="center">
+    <div class='container' align='center'>
       <h1>Привет, {{ user }}!</h1>
-      <br>
-      <h2>Кого будем искать?</h2>
-      <form action="" method="post">
-        <input type="text" placeholder="" name="search" value="{{
-          request.form.search }}">
-        <input class="btn btn-default" type="submit" value="Искать!">
+      <form class='form-inline' action='' method='POST'>
+        <input type="text" class="form-control mr-sm-4" placeholder="Начинайте вводить имя и фамилию" name='search' id='user_autocomplete' autocomplete='off' aria-label="Email">
+        <input class='btn btn-default' type='submit' value='Искать!'>
       </form>
+
       {% if user_info_fn %}
-        <p class="error"> Ищем {{ user_info_fn }} {{ user_info_ln }} <img src=" {{ user_info_photo }} ">
+        <p class='error'> Ищем {{ user_info_fn }} {{ user_info_ln }} <img src=' {{ user_info_photo }} '>
       {% endif %}
       {% if info %}
-        <p class="error"> {{ info }}
+        <p class='error'> {{ info }}
       {% endif %}
-      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/main.js"></script>
   </body>
 </html>
