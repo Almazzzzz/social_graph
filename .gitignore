@@ -107,3 +107,4 @@ vk_config.v2.json
 # other
 settings.py
 config.py
+.DS_Store

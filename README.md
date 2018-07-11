@@ -14,3 +14,7 @@ arangodb_root_password = 'SoMeRoOtPaSsWoRd'
 arangodb_user = 'arangodb_user'
 
 arangodb_user_password = 'SoMePaSsWoRd'
+
+#### uwsgi
+
+uwsgi --ini social_graph.ini --set-placeholder base_dir=/your/custom/path/to/app/dir

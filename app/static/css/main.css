@@ -1,0 +1,35 @@
+
+body {
+    margin-top: 70px;
+}
+
+.carousel-inner {
+    height: 400px;
+}
+
+.carousel-caption {
+    top: 10px;
+    font-size: 20px;
+}
+
+h1 {
+    color: green;
+    font-size: 48px;
+}
+
+p {
+    font-size: 14px;
+    font-family: Arial;
+}
+
+.odd {
+    color: blue;
+}
+
+.even {
+    background-color: #DDD;
+}
+
+#big {
+    color: red;
+}

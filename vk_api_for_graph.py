@@ -2,13 +2,12 @@ import vk
 import settings
 
 
-class VkApi:
+class VkApiForGraph:
     def __init__(self):
         self.session = vk.Session(access_token=settings.vk_service_key)
         self.api = vk.API(self.session, v='5.78')
 
     def get_friends(self, user_id):
-        # user = self.api.users.get(user_ids=user_id)
         try:
             friends = self.api.friends.get(user_id=user_id)
         except vk.exceptions.VkAPIError:
