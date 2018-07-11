@@ -3,7 +3,7 @@ from app import app
 import vk_api
 import datetime
 import uwsgi
-import settings # app_id, client_secret
+import settings
 
 CURRENT_DATE = datetime.datetime.utcnow()
 
@@ -73,7 +73,7 @@ def hello():
                     elif cache_content in list(fails.keys()):
                         info = fails.get(cache_content)
                     else:
-                        info = 'Никуда не попал'
+                        info = 'Как ты сюда попал?'
                         print(cache_content)
                 else:
                     info = 'Кеш пустой. Поищем в базе'
