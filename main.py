@@ -1,11 +1,11 @@
 from graph import *
-from vk_api import *
+from vk_api_for_graph import *
 
 
 graph = Graph('social_graph_db', 'vk')
 users = graph.find_or_create_vertex_collection('users')
 friends = graph.find_or_create_edge_definition('friends', 'users')
-vk_api = VkApi()
+vkontakte_api = VkApiForGraph()
 
 
 def bfs(start_vk_id, goal_vk_id, stop_level=6):
@@ -30,7 +30,7 @@ def bfs(start_vk_id, goal_vk_id, stop_level=6):
             return True
 
         if not stop_condition:
-            friends_list = vk_api.get_friends(id)
+            friends_list = vkontakte_api.get_friends(id)
             stop_condition = goal_vk_id in friends_list
             if stop_condition:
                 queue = [[id, goal_vk_id, level]]
@@ -78,6 +78,6 @@ def find_path(start_vk_id, target_vk_id):
 
 
 if __name__ == '__main__':
-    # result = bfs(1861235, 11821, 5)
-    result = find_path(1861235, 11821)
+    result = bfs(1861235, 11821, 5)
+    # result = find_path(1861235, 11821)
     print(result)
