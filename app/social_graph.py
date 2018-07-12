@@ -5,36 +5,39 @@ import datetime
 import json
 import uwsgi
 from vk_api_for_web import *
-import settings
 
 
 CURRENT_DATE = datetime.datetime.utcnow()
 
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        service = VkApiForWeb(request.form['username'],
-                              request.form['password'], with_app=True)
-        vk_session = service.session
-
-        error = service.error
-        if not error:
-            response = make_response(redirect(url_for('search_user')))
-            expire_date = CURRENT_DATE + datetime.timedelta(days=1)
-            response.set_cookie('username', request.form['username'],
-                                expires=expire_date)
-            return response
-
+@app.route('/')
+def index():
     if request.cookies.get('username'):
         return redirect(url_for('search_user'))
+    else:
+        return render_template('index.html')
 
-    return render_template('login.html', error=error)
+
+@app.route('/login', methods=['POST'])
+def login():
+    error = None
+    service = VkApiForWeb(request.form['username'],
+                          request.form['password'], with_app=True)
+    vk_session = service.session
+    error = service.error
+
+    if error:
+        return render_template('index.html', error=error)
+    else:
+        response = make_response(redirect(url_for('search_user')))
+        expire_date = CURRENT_DATE + datetime.timedelta(days=1)
+        response.set_cookie('username', request.form['username'],
+                            expires=expire_date)
+        return response
+        return redirect(url_for('search_user'))
 
 
-@app.route('/autocomplete', methods=['GET'])
+@app.route('/autocomplete')
 def autocomplete():
     result = []
     term = request.args.get('term')
@@ -53,56 +56,90 @@ def autocomplete():
     return Response(json.dumps(result), mimetype='application/json')
 
 
-@app.route('/search_user', methods=['GET', 'POST'])
+@app.route('/search_user')
 def search_user():
-    user = None
-    info = None
-    user_info_fn = None
-    user_info_ln = None
-    user_info_photo = None
-    fails = {'notfound': 'Ничего не нашлось', 'fail': 'Ничего не нашлось',
-             'inprogress': 'Поиск еще ведется, придите попозже'}
-
     username = request.cookies.get('username')
     service = VkApiForWeb(login=username)
     vk_session = service.session
 
     if service.error:
-        return redirect(url_for('login'))
+        return redirect(url_for('/'))
     else:
         api = vk_session.get_api()
         user_id = vk_session.check_sid()['user']['id']
         user = api.account.getProfileInfo()['first_name']
 
-    if request.method == 'POST':
-        if request.form['search']:
-            try:
-                user_info = api.users.get(user_ids=str(request.form['search']),
-                                          fields='photo_50', name_case='acc')
-            except:
-                info = 'Нет такого, попробуй поискать кого-то еще'
-            else:
-                user_info_fn = user_info[0].get('first_name')
-                user_info_ln = user_info[0].get('last_name')
-                user_info_photo = user_info[0].get('photo_50')
-                user_info_id = user_info[0].get('id')
-                user_search = str(user_id) + '_' + str(user_info_id)
-                if uwsgi.cache_exists(user_search):
-                    cache_content = uwsgi.cache_get(user_search).decode('utf-8')
-                    if cache_content in ['found']:
-                        info = 'Есть в кеше, идем в базу'
-                        uwsgi.mule_msg(user_search)
-                    elif cache_content in list(fails.keys()):
-                        info = fails.get(cache_content)
-                    else:
-                        info = 'Как ты сюда попал?'
-                else:
-                    info = 'Кеш пустой. Поищем в базе'
-                    uwsgi.mule_msg(user_search)
-        else:
-            info = 'Нужно указать кого искать'
+    return render_template('search_user.html', user=user, user_id=user_id)
 
-    return render_template('search_user.html', user=user, info=info,
-                           user_info_fn=user_info_fn,
-                           user_info_ln=user_info_ln,
-                           user_info_photo=user_info_photo)
+
+@app.route('/data_handler', methods=['POST'])
+def data_handler():
+    success = False
+    fails_messages = {
+        'notfound': 'Увы, но общих знакомых нет',
+        'fail': 'Увы, но общих знакомых нет',
+        'inprogress': 'Поиск еще ведется, подождите'
+    }
+
+    user = request.form['user']
+    user_id = request.form['user_id']
+
+    if not request.form['search']:
+        error = 'Нужно указать кого искать'
+        return render_template('search_user.html', error=error,
+                               user=user, user_id=user_id)
+
+    username = request.cookies.get('username')
+    service = VkApiForWeb(login=username)
+    vk_session = service.session
+    if service.error:
+        return render_template('search_user.html', error=error,
+                               user=user, user_id=user_id)
+    api = vk_session.get_api()
+
+    try:
+        target_user = api.users.get(user_ids=str(request.form['search']))
+    except:
+        error = 'Пользователя не существует. Попробуйте другой запрос.'
+        return render_template('search_user.html', error=error,
+                               user=user, user_id=user_id)
+
+    target_user_id = target_user[0].get('id')
+    key = f'{str(user_id)}_{str(target_user_id)}'
+    if uwsgi.cache_exists(key):
+        cache_data = uwsgi.cache_get(key).decode('utf-8')
+        if cache_data == 'found':
+            message = 'Есть в кеше, идем в базу'
+            success = True
+            uwsgi.mule_msg(key) # Это и есть запрос запуск работы
+        elif cache_data in list(fails_messages.keys()):
+            # Говорим, что общих знакых нет
+            message = fails_messages.get(cache_data)
+            success = False
+    else:
+        message = 'Кеш пустой. Поищем в базе'
+        uwsgi.mule_msg(key)
+
+    return redirect(url_for('result', user_id=user_id, message=message,
+                           target_user_id=target_user_id, success=success))
+
+
+@app.route('/result')
+def result():
+    username = request.cookies.get('username')
+    service = VkApiForWeb(login=username)
+    vk_session = service.session
+    api = vk_session.get_api()
+
+    user_id = request.args.get('user_id')
+    target_user_id = request.args.get('target_user_id')
+    message = request.args.get('message')
+    success = request.args.get('success')
+
+    users = api.users.get(user_ids=f'{str(user_id)}, {str(target_user_id)}',
+                          fields='photo_50', name_case='ins')
+    user = users[0]
+    target_user = users[1]
+
+    return render_template('result.html', user=user, message=message,
+                           target_user=target_user, success=success)

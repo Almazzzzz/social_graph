@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <title>VK 6Handshakes</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  </head>
+
+  <body>
+    <div class='container' align='center'>
+      <h1>Результат поиска</h1>
+      <br>
+      {% if user and target_user %}
+        <p>Ищем общих знакомых между:</p>
+        <p>{{ user.get('first_name') + ' ' + user.get('last_name') }} <img src="{{ user.get('photo_50') }}"></p>
+        <p>и</p>
+        <p>{{ target_user.get('first_name') + ' ' + target_user.get('last_name') }} <img src="{{ target_user.get('photo_50') }}"></p>
+      {% endif %}
+
+      {% if message %}
+          <p>{{ message }}</p>
+      {% endif %}
+      <a class="btn btn-primary" href="/" role="button">Назад</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+  </body>
+</html>
