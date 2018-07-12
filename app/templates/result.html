@@ -20,6 +20,11 @@
       {% if message %}
           <p>{{ message }}</p>
       {% endif %}
+
+      {% if success == 'True' %}
+        <p>{{ path }}</p>
+      {% endif %}
+
       <a class="btn btn-primary" href="/" role="button">Назад</a>
     </div>
 

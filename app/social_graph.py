@@ -5,9 +5,7 @@ import datetime
 import json
 import uwsgi
 from vk_api_for_web import *
-
-
-CURRENT_DATE = datetime.datetime.utcnow()
+from graph import *
 
 
 @app.route('/')
@@ -30,7 +28,7 @@ def login():
         return render_template('index.html', error=error)
     else:
         response = make_response(redirect(url_for('search_user')))
-        expire_date = CURRENT_DATE + datetime.timedelta(days=1)
+        expire_date = datetime.datetime.utcnow() + datetime.timedelta(days=1)
         response.set_cookie('username', request.form['username'],
                             expires=expire_date)
         return response
@@ -75,12 +73,15 @@ def search_user():
 @app.route('/data_handler', methods=['POST'])
 def data_handler():
     success = False
+    in_progress = False
+    path =[]
+    cache_data = None
+    message = None
     fails_messages = {
         'notfound': 'Увы, но общих знакомых нет',
         'fail': 'Увы, но общих знакомых нет',
         'inprogress': 'Поиск еще ведется, подождите'
     }
-
     user = request.form['user']
     user_id = request.form['user_id']
 
@@ -106,18 +107,23 @@ def data_handler():
 
     target_user_id = target_user[0].get('id')
     key = f'{str(user_id)}_{str(target_user_id)}'
+
     if uwsgi.cache_exists(key):
         cache_data = uwsgi.cache_get(key).decode('utf-8')
         if cache_data == 'found':
-            message = 'Есть в кеше, идем в базу'
-            success = True
-            uwsgi.mule_msg(key) # Это и есть запрос запуск работы
+            path = find_path(user_id, target_user_id)
+
         elif cache_data in list(fails_messages.keys()):
-            # Говорим, что общих знакых нет
             message = fails_messages.get(cache_data)
-            success = False
     else:
-        message = 'Кеш пустой. Поищем в базе'
+        path = find_path(user_id, target_user_id)
+
+    if path:
+        message = 'Ура! Найдены общие знакомые'
+        success = True
+    elif cache_data not in list(fails_messages.keys()):
+        message = fails_messages.get('inprogress')
+        in_progress = True
         uwsgi.mule_msg(key)
 
     return redirect(url_for('result', user_id=user_id, message=message,
@@ -135,11 +141,17 @@ def result():
     target_user_id = request.args.get('target_user_id')
     message = request.args.get('message')
     success = request.args.get('success')
+    in_progress = request.args.get('in_progress')
 
     users = api.users.get(user_ids=f'{str(user_id)}, {str(target_user_id)}',
                           fields='photo_50', name_case='ins')
     user = users[0]
     target_user = users[1]
+    if success == 'True':
+        path = find_path(user_id, target_user_id)
+    else:
+        path = []
 
     return render_template('result.html', user=user, message=message,
-                           target_user=target_user, success=success)
+                           target_user=target_user, success=success, path=path,
+                           in_progress=in_progress)
