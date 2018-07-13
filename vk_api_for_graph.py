@@ -13,7 +13,7 @@ class VkApiForGraph:
         except vk.exceptions.VkAPIError:
             friends = {'items': []}
         # Limit number of loaded friends for development
-        # TODO: remove limitation in production
-        friends_list = friends.get('items', [])[:20]
+        # friends_list = friends.get('items', [])[:20]
+        friends_list = friends.get('items', [])
 
         return friends_list
