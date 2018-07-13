@@ -19,7 +19,7 @@ class VkApiForWeb:
             self.session.auth(reauth=with_app)
             self.error = None
         except vk_api.AuthError:
-            self.error = 'Ошибка авторизации'
+            self.error = 'Введены неверные данные. Попробуйте еще раз'
         except:
             self.error = 'Произошла ошибка. Попробуйте еще раз'
 

@@ -72,15 +72,13 @@ def search_user():
 
 @app.route('/data_handler', methods=['POST'])
 def data_handler():
-    success = False
-    in_progress = False
     path =[]
     cache_data = None
     message = None
     fails_messages = {
         'notfound': 'Увы, но общих знакомых нет',
         'fail': 'Увы, но общих знакомых нет',
-        'inprogress': 'Поиск еще ведется, подождите'
+        'inprogress': 'Идет поиск, подождите'
     }
     user = request.form['user']
     user_id = request.form['user_id']
@@ -120,14 +118,44 @@ def data_handler():
 
     if path:
         message = 'Ура! Найдены общие знакомые'
-        success = True
+        cache_data = 'found'
+        uwsgi.cache_update(key, 'found')
     elif cache_data not in list(fails_messages.keys()):
         message = fails_messages.get('inprogress')
-        in_progress = True
+        cache_data = 'inprogress'
         uwsgi.mule_msg(key)
 
     return redirect(url_for('result', user_id=user_id, message=message,
-                           target_user_id=target_user_id, success=success))
+                           target_user_id=target_user_id, state=cache_data))
+
+
+@app.route('/check_status')
+def check_status():
+    cache_data = None
+    user_id = request.args.get('user_id')
+    target_user_id = request.args.get('target_user_id')
+    key = f'{str(user_id)}_{str(target_user_id)}'
+
+    if uwsgi.cache_exists(key):
+        cache_data = uwsgi.cache_get(key).decode('utf-8')
+
+    status = {'status': cache_data}
+    return Response(json.dumps(status), mimetype='application/json')
+
+
+@app.route('/show_results_table')
+def show_results_table():
+    user_id = request.args.get('user_id')
+    target_user_id = request.args.get('target_user_id')
+    username = request.cookies.get('username')
+    service = VkApiForWeb(login=username)
+    vk_session = service.session
+    api = vk_session.get_api()
+    path = find_path(user_id, target_user_id)
+    path_users = api.users.get(user_ids=f"{', '.join(path)}",
+                               fields='photo_50')
+
+    return render_template('results_table.html', path_users=path_users)
 
 
 @app.route('/result')
@@ -140,18 +168,19 @@ def result():
     user_id = request.args.get('user_id')
     target_user_id = request.args.get('target_user_id')
     message = request.args.get('message')
-    success = request.args.get('success')
-    in_progress = request.args.get('in_progress')
+    state = request.args.get('state')
 
     users = api.users.get(user_ids=f'{str(user_id)}, {str(target_user_id)}',
                           fields='photo_50', name_case='ins')
     user = users[0]
     target_user = users[1]
-    if success == 'True':
+    if state == 'found':
         path = find_path(user_id, target_user_id)
+        path_users = api.users.get(user_ids=f"{', '.join(path)}",
+                                   fields='photo_50')
     else:
-        path = []
+        path_users = []
 
     return render_template('result.html', user=user, message=message,
-                           target_user=target_user, success=success, path=path,
-                           in_progress=in_progress)
+                           target_user=target_user, path_users=path_users,
+                           state=state)

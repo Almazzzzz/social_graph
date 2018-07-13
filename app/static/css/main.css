@@ -1,35 +1,23 @@
-
 body {
-    margin-top: 70px;
+    margin-top: 60px;
 }
 
-.carousel-inner {
-    height: 400px;
+.text-left {
+  text-align: left;
 }
 
-.carousel-caption {
-    top: 10px;
-    font-size: 20px;
+.text-right {
+  text-align: right;
 }
 
-h1 {
-    color: green;
-    font-size: 48px;
+.text-center {
+  text-align: center;
 }
 
-p {
-    font-size: 14px;
-    font-family: Arial;
+.inline {
+  display: inline-block;
 }
 
-.odd {
-    color: blue;
-}
-
-.even {
-    background-color: #DDD;
-}
-
-#big {
-    color: red;
+.linked {
+  cursor: pointer;
 }
