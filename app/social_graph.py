@@ -35,6 +35,17 @@ def login():
         return redirect(url_for('search_user'))
 
 
+@app.route('/logout')
+def logout():
+    if request.cookies.get('username'):
+        response = make_response(redirect(url_for('logout')))
+        response.delete_cookie('username')
+        return response
+        return redirect(url_for('index'))
+    else:
+        return redirect(url_for('search_user'))
+
+
 @app.route('/autocomplete')
 def autocomplete():
     result = []
@@ -61,7 +72,7 @@ def search_user():
     vk_session = service.session
 
     if service.error:
-        return redirect(url_for('/'))
+        return redirect(url_for('index'))
     else:
         api = vk_session.get_api()
         user_id = vk_session.check_sid()['user']['id']
