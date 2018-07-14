@@ -95,7 +95,7 @@ def data_handler():
     user_id = request.form['user_id']
 
     if not request.form['search']:
-        error = 'Нужно указать кого искать'
+        error = 'Нужно указать, кого искать'
         return render_template('search_user.html', error=error,
                                user=user, user_id=user_id)
 
